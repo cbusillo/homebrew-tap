@@ -11,8 +11,8 @@ class BdToAvp < Formula
   end
 
   depends_on "uv" => :build
-  depends_on "ffmpeg"
   depends_on arch: :arm64
+  depends_on "ffmpeg"
   depends_on macos: :sonoma
   depends_on "python@3.12"
 
