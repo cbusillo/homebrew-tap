@@ -1,0 +1,106 @@
+{
+  "defaultBranch": "main",
+  "projectType": "homebrew-tap",
+  "pullRequests": {
+    "preferredMergeMethod": "merge",
+    "allowedMergeMethods": ["merge"]
+  },
+  "branchProtection": {
+    "main": {
+      "system": "ruleset",
+      "requiresPullRequest": true,
+      "requiredStatusChecks": ["formula"],
+      "requiredApprovals": 0,
+      "enforceAdmins": true,
+      "blocksForcePushes": true,
+      "blocksDeletion": true,
+      "requiresConversationResolution": true
+    }
+  },
+  "docs": {
+    "overview": "README.md",
+    "formulaDirectory": "Formula",
+    "workflows": [
+      ".github/workflows/tests.yml",
+      ".github/workflows/autobump.yml"
+    ]
+  },
+  "qualityGate": {
+    "syntax": {
+      "metadata": "jq empty .github/github.json",
+      "workflows": "actionlint",
+      "formula": "ruby -c Formula/*.rb"
+    },
+    "homebrew": {
+      "audit": "brew audit --strict --online cbusillo/tap/bd-to-avp",
+      "install": "brew install --build-from-source cbusillo/tap/bd-to-avp",
+      "test": "brew test cbusillo/tap/bd-to-avp",
+      "linkage": "brew linkage --test cbusillo/tap/bd-to-avp"
+    },
+    "docsRequiredWhen": [
+      "formula or cask changes",
+      "tap installation changes",
+      "GitHub workflow changes",
+      "GitHub repository settings change"
+    ]
+  },
+  "importantWorkflows": [
+    "Test formulae",
+    "Update formulae",
+    "Dependabot Updates"
+  ],
+  "requiredStatusChecks": ["formula"],
+  "qaLabels": [],
+  "deployLabels": [],
+  "healthUrls": [],
+  "relatedRepos": ["cbusillo/BD_to_AVP"],
+  "githubSignals": {
+    "postMerge": {
+      "waitForActions": true,
+      "checkSecurityAndQuality": true
+    },
+    "capabilities": {
+      "dependencyGraph": "available",
+      "dependabotAlerts": "available",
+      "securityAdvisories": "available",
+      "secretScanning": "available",
+      "codeScanning": "not_enabled"
+    },
+    "refreshWhen": [
+      "repo visibility changes",
+      "security settings change",
+      "token permissions change",
+      "branch protection changes"
+    ]
+  },
+  "githubSettings": {
+    "expected": {
+      "hasIssues": true,
+      "hasProjects": false,
+      "hasWiki": false,
+      "allowMergeCommit": true,
+      "allowSquashMerge": false,
+      "allowRebaseMerge": false,
+      "deleteBranchOnMerge": true,
+      "actionsDefaultWorkflowPermissions": "read",
+      "actionsCanCreatePullRequests": true,
+      "actionsRequireShaPinning": true
+    }
+  },
+  "cleanup": {
+    "deleteMergedLocalBranches": true,
+    "removeMergedCleanWorktrees": true
+  },
+  "metadataFreshness": {
+    "updateWhen": [
+      "docs routing changes",
+      "validation gates change",
+      "primary commands change",
+      "important workflows change",
+      "repo relationship changes",
+      "cleanup policy changes",
+      "GitHub repository settings change",
+      "formula or cask inventory changes"
+    ]
+  }
+}

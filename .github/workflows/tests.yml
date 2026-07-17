@@ -22,6 +22,15 @@ jobs:
       - name: Trust tap
         run: brew trust cbusillo/tap
 
+      - name: Install workflow validation tools
+        run: brew install actionlint
+
+      - name: Validate repository metadata
+        run: jq empty .github/github.json
+
+      - name: Validate workflows
+        run: actionlint
+
       - name: Audit formula
         run: brew audit --strict --online cbusillo/tap/bd-to-avp
 
