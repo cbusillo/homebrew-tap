@@ -1,0 +1,35 @@
+name: Test formulae
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  formula:
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@1f8e202ffddf94def7f42f6fa3a482e821489f9c # 2026.07.10.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Trust tap
+        run: brew trust cbusillo/tap
+
+      - name: Audit formula
+        run: brew audit --strict --online cbusillo/tap/bd-to-avp
+
+      - name: Install formula
+        run: brew install --build-from-source cbusillo/tap/bd-to-avp
+
+      - name: Test formula
+        run: brew test cbusillo/tap/bd-to-avp
+
+      - name: Check linkage
+        run: brew linkage --test cbusillo/tap/bd-to-avp
