@@ -12,9 +12,9 @@ class BdToAvp < Formula
 
   depends_on "uv" => :build
   depends_on "ffmpeg"
-  depends_on "python@3.12"
   depends_on arch: :arm64
   depends_on macos: :sonoma
+  depends_on "python@3.12"
 
   def install
     main_module = buildpath/"bd_to_avp/__main__.py"
