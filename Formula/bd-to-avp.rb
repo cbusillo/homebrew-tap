@@ -1,8 +1,8 @@
 class BdToAvp < Formula
   desc "Convert 3D Blu-ray video to Apple spatial video"
   homepage "https://github.com/cbusillo/BD_to_AVP"
-  url "https://github.com/cbusillo/BD_to_AVP/archive/refs/tags/v0.2.143.tar.gz"
-  sha256 "9fbcdf87513e7bf7e934f0c613902757b724f8bf75e9e45547eaa87ba76f3d4f"
+  url "https://github.com/cbusillo/BD_to_AVP/archive/refs/tags/v0.3.0.tar.gz"
+  sha256 "9f0be18398fac5e76bdf7e5aa7f7be750cd34d3025e13558ae13b3dd7fa89021"
   license "GPL-3.0-or-later"
 
   livecheck do
