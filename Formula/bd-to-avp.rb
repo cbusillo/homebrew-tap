@@ -33,7 +33,7 @@ class BdToAvp < Formula
     without_gui = %w[pyside6 pyside6-addons pyside6-essentials shiboken6].flat_map do |package|
       ["--no-install-package", package]
     end
-    system "uv", "sync", "--frozen", "--no-default-groups", "--no-editable",
+    system "uv", "sync", "--frozen", "--no-config", "--no-default-groups", "--no-editable",
            "--python", formula_opt_bin("python@3.12")/"python3.12", *without_gui
     bin.install_symlink libexec/"bin/bd-to-avp"
     bin.install_symlink libexec/"bin/bd-to-avp-worker"
