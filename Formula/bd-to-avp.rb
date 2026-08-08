@@ -17,17 +17,6 @@ class BdToAvp < Formula
   depends_on "python@3.12"
 
   def install
-    main_module = buildpath/"bd_to_avp/__main__.py"
-    if main_module.read.include?("from bd_to_avp.app import start_gui\n")
-      inreplace main_module,
-                "from bd_to_avp.app import start_gui\n",
-                <<~PYTHON
-                  def start_gui() -> None:
-                      raise SystemExit("The Homebrew formula installs the CLI only. Use `bd-to-avp --help` or install the release DMG.")
-
-                PYTHON
-    end
-
     ENV["UV_PROJECT_ENVIRONMENT"] = libexec
     ENV["UV_PYTHON_DOWNLOADS"] = "never"
     without_gui = %w[pyside6 pyside6-addons pyside6-essentials shiboken6].flat_map do |package|
