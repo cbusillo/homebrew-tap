@@ -32,6 +32,11 @@ jobs:
       - name: Validate workflows
         run: actionlint
 
+      - name: Validate the updater helper
+        run: |
+          node --check scripts/updater-proposal.mjs
+          node --test scripts/updater-proposal.test.mjs
+
       - name: Audit formula
         run: brew audit --strict --online cbusillo/tap/bd-to-avp
 

@@ -29,7 +29,11 @@
     "syntax": {
       "metadata": "jq empty .github/github.json",
       "workflows": "actionlint",
-      "formula": "ruby -c Formula/*.rb"
+      "formula": "ruby -c Formula/*.rb",
+      "updater": "node --check scripts/updater-proposal.mjs"
+    },
+    "test": {
+      "default": "node --test scripts/updater-proposal.test.mjs"
     },
     "homebrew": {
       "audit": "brew audit --strict --online cbusillo/tap/bd-to-avp",

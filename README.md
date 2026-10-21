@@ -38,3 +38,49 @@ Changes land through pull requests on protected `main`. Formula changes must
 pass audit, source installation, command tests, and linkage checks before merge.
 The same checks run on Launchplane train candidates. Routine Actions updates
 wait seven days before Dependabot opens them; security updates remain separate.
+
+## Formula Updates
+
+The scheduled/manual updater uses Homebrew livecheck and
+[`bump-formula-pr --write-only`](https://docs.brew.sh/Manpage#bump-formula-pr-options-formula)
+to calculate and audit an update without Git or PR writes. A missing or failed
+livecheck is a failure; a valid no-update result creates no proposal.
+
+A separate fresh hosted job reads that run's bounded data artifact outside an
+exact run-SHA checkout. The dependency-free helper preserves every formula byte
+except the stable archive URL and SHA-256, checks a newer numeric version of the
+same upstream and verifies its published stable GitHub release metadata. It never
+loads candidate Ruby or downloads/executes the archive. Homebrew calculates the
+checksum in the unprivileged job; ordinary formula CI verifies the archive and
+installation. Unexpected files, executable edits, modes, provenance or oversized
+requests fail before requesting OIDC.
+
+Only the submit job has OIDC permission. It uses the existing Launchplane
+updater-proposal route and service-held App, with `LAUNCHPLANE_PUBLIC_URL` supplied
+as an Actions variable. The exact default-branch workflow selector must already be
+approved in Launchplane. Source changes do not grant access or activate policy;
+[Launchplane#3404](https://github.com/cbusillo/launchplane/issues/3404) owns live
+readiness and real-run qualification. Existing formula CI, review and train gates
+apply to App-authored proposals.
+
+Created/replayed results report the actual returned PR and head. Replays may refer
+to closed history. Pending means this run's files were not applied and the existing
+proposal needs ordinary review. A stale-base conflict needs a fresh calculation
+from default. A refusal stops that action; unknown effects retain the exact request
+and available response in the workflow's seven-day recovery artifact for supported
+reconciliation. There is no direct PR publisher or ref-replacement fallback.
+
+For helper/workflow changes with the formula unchanged, run:
+
+```bash
+node --check scripts/updater-proposal.mjs
+node --test scripts/updater-proposal.test.mjs
+jq empty .github/github.json
+actionlint
+ruby -c Formula/bd-to-avp.rb
+```
+
+The whole helper test module covers the data-to-proposal safety boundary. The
+required `formula` CI job runs it plus all existing Homebrew gates on PRs and train
+candidates. Formula edits also require the audit, source-install, command and
+linkage commands recorded in `.github/github.json`.
