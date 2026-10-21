@@ -33,7 +33,8 @@
       "updater": "node --check scripts/updater-proposal.mjs"
     },
     "test": {
-      "default": "node --test scripts/updater-proposal.test.mjs"
+      "local": "node --test scripts/updater-proposal.test.mjs",
+      "ci": "node --test scripts/updater-proposal.test.mjs"
     },
     "homebrew": {
       "audit": "brew audit --strict --online cbusillo/tap/bd-to-avp",

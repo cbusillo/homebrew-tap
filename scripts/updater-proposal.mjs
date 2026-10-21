@@ -39,6 +39,8 @@ export function readArtifact(directory, limit = LIMITS.artifact) {
 }
 
 export function contextFromEnvironment(env) {
+  // GitHub guarantees schedule runs use the default branch; its event payload is not needed.
+  const defaultBranch = env.GITHUB_EVENT_NAME === 'schedule' ? env.GITHUB_REF_NAME : env.DEFAULT_BRANCH;
   const context = {
     repository: env.GITHUB_REPOSITORY, base_sha: env.GITHUB_SHA,
     workflow_ref: env.GITHUB_WORKFLOW_REF, run_id: env.GITHUB_RUN_ID, run_attempt: env.GITHUB_RUN_ATTEMPT,
@@ -46,8 +48,8 @@ export function contextFromEnvironment(env) {
   requireThat(/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(context.repository ?? '')
     && SHA.test(context.base_sha ?? '') && /^[1-9]\d*$/.test(context.run_id ?? '')
     && /^[1-9]\d*$/.test(context.run_attempt ?? ''), 'Invalid trusted run context');
-  requireThat(typeof env.DEFAULT_BRANCH === 'string' && env.DEFAULT_BRANCH.length > 0
-    && env.GITHUB_REF === `refs/heads/${env.DEFAULT_BRANCH}`
+  requireThat(typeof defaultBranch === 'string' && defaultBranch.length > 0
+    && env.GITHUB_REF === `refs/heads/${defaultBranch}`
     && context.workflow_ref === `${context.repository}/.github/workflows/autobump.yml@${env.GITHUB_REF}`
     && ['schedule', 'workflow_dispatch'].includes(env.GITHUB_EVENT_NAME), 'Expected the default-branch updater workflow');
   return context;
@@ -118,7 +120,7 @@ export function preparePayload(artifact, context, base, limits = LIMITS) {
   const payload = {
     repository: context.repository, base_sha: context.base_sha,
     title: `bd-to-avp ${next.version}`,
-    body: `Homebrew calculated and audited this stable URL/checksum update.\n\nCalculation: https://github.com/${context.repository}/actions/runs/${context.run_id}/attempts/${context.run_attempt}\n\nOrdinary formula CI, review and Launchplane train admission still apply.`,
+    body: `Homebrew calculated and audited this stable URL/checksum update.\n\nWorkflow: https://github.com/${context.repository}/actions/workflows/autobump.yml\n\nOrdinary formula CI, review and Launchplane train admission still apply.`,
     files: [{ path: FORMULA, content: artifact.content }],
   };
   requireThat(Buffer.byteLength(JSON.stringify(payload)) <= limits.body, 'Request exceeds route JSON limit');

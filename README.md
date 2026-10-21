@@ -53,7 +53,8 @@ same upstream and verifies its published stable GitHub release metadata. It neve
 loads candidate Ruby or downloads/executes the archive. Homebrew calculates the
 checksum in the unprivileged job; ordinary formula CI verifies the archive and
 installation. Unexpected files, executable edits, modes, provenance or oversized
-requests fail before requesting OIDC.
+requests fail before requesting OIDC. Scheduled runs use GitHub's documented
+default-branch ref; manual runs also require the default branch.
 
 Only the submit job has OIDC permission. It uses the existing Launchplane
 updater-proposal route and service-held App, with `LAUNCHPLANE_PUBLIC_URL` supplied
@@ -69,18 +70,16 @@ proposal needs ordinary review. A stale-base conflict needs a fresh calculation
 from default. A refusal stops that action; unknown effects retain the exact request
 and available response in the workflow's seven-day recovery artifact for supported
 reconciliation. There is no direct PR publisher or ref-replacement fallback.
-
-For helper/workflow changes with the formula unchanged, run:
-
-```bash
-node --check scripts/updater-proposal.mjs
-node --test scripts/updater-proposal.test.mjs
-jq empty .github/github.json
-actionlint
-ruby -c Formula/bd-to-avp.rb
-```
+For recovery, re-run **all jobs** on the same run/base so calculation produces a
+fresh attempt-bound artifact. Re-running only the submit job cannot reuse the
+previous attempt's artifact. Request content stays stable across run IDs/attempts
+for the same base and formula update, so the service can reconcile the identical
+request, including closed history. Preserve original evidence when the base or
+upstream changes; do not treat a different request as reconciliation.
 
 The whole helper test module covers the data-to-proposal safety boundary. The
 required `formula` CI job runs it plus all existing Homebrew gates on PRs and train
-candidates. Formula edits also require the audit, source-install, command and
-linkage commands recorded in `.github/github.json`.
+candidates. For local helper/workflow changes with the formula unchanged, use
+`qualityGate.test.local` and `qualityGate.syntax` in
+[`.github/github.json`](.github/github.json). Formula edits also require its
+audit, source-install, command and linkage commands.

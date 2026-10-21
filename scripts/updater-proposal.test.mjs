@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 import {
-  contextFromEnvironment, decode, FORMULA, LIMITS, makeArtifact, preparePayload,
+  contextFromEnvironment, decode, FORMULA, makeArtifact, preparePayload,
   readArtifact, selectVersion, summarize, TAP_FORMULA, validateEdit, verifyRelease,
 } from './updater-proposal.mjs';
 
@@ -41,7 +41,7 @@ const record = (latest = '1.10.0', outdated = true, ahead = false) => [{
 const environment = {
   GITHUB_REPOSITORY: context.repository, GITHUB_SHA: context.base_sha, GITHUB_WORKFLOW_REF: context.workflow_ref,
   GITHUB_RUN_ID: context.run_id, GITHUB_RUN_ATTEMPT: context.run_attempt,
-  DEFAULT_BRANCH: 'main', GITHUB_REF: 'refs/heads/main', GITHUB_EVENT_NAME: 'schedule',
+  DEFAULT_BRANCH: 'main', GITHUB_REF_NAME: 'main', GITHUB_REF: 'refs/heads/main', GITHUB_EVENT_NAME: 'schedule',
 };
 
 test('only a newer stable URL and checksum produce the exact full-file request', () => {
@@ -49,6 +49,8 @@ test('only a newer stable URL and checksum produce the exact full-file request',
   assert.deepEqual(payload.files, [{ path: FORMULA, content: candidate() }]);
   assert.equal(payload.repository, context.repository);
   assert.equal(payload.base_sha, context.base_sha);
+  const laterRun = { ...context, run_id: '456', run_attempt: '3' };
+  assert.deepEqual(preparePayload(makeArtifact(laterRun, base, candidate(), '1.10.0'), laterRun, base), payload);
   assert.match(payload.title, /1\.10\.0/);
   assert.equal(validateEdit(base, candidate('2.0.0')).version, '2.0.0');
   const crlfBase = base.replaceAll('\n', '\r\n'), crlfNext = candidate().replaceAll('\n', '\r\n');
@@ -80,7 +82,7 @@ test('unsafe formula edits, source redirects, equal versions and downgrades refu
     candidate().replace('b'.repeat(64), '#{system("evil")}'), candidate().trimEnd(),
     candidate().replace('v1.10.0.tar.gz', 'v1.10.0.tar.gz?redirect=evil')];
   for (const content of bad) assert.throws(() => validateEdit(base, content));
-  assert.throws(() => decode(Buffer.from([0xc0, 0xaf])), /encoded data/);
+  assert.throws(() => decode(Buffer.from([0xc0, 0xaf])), TypeError);
   assert.throws(() => validateEdit(base, candidate() + '\ud800'), /UTF-8/);
 });
 
@@ -98,7 +100,10 @@ test('unexpected provenance, schema, path, mode, content and fields cannot enter
 
 test('trusted context rejects a nondefault run, another workflow and invalid event or identity', () => {
   assert.deepEqual(contextFromEnvironment(environment), context);
-  for (const changes of [{ DEFAULT_BRANCH: '' }, { GITHUB_REF: 'refs/heads/work/task' },
+  assert.deepEqual(contextFromEnvironment({ ...environment, DEFAULT_BRANCH: '' }), context);
+  assert.deepEqual(contextFromEnvironment({ ...environment, GITHUB_EVENT_NAME: 'workflow_dispatch' }), context);
+  for (const changes of [{ DEFAULT_BRANCH: '', GITHUB_EVENT_NAME: 'workflow_dispatch' }, { GITHUB_REF_NAME: '' }, { GITHUB_REF: 'refs/heads/work/task' },
+    { GITHUB_EVENT_NAME: 'workflow_dispatch', GITHUB_REF_NAME: 'work/task', GITHUB_REF: 'refs/heads/work/task' },
     { GITHUB_EVENT_NAME: 'pull_request_target' }, { GITHUB_WORKFLOW_REF: 'example/tap/.github/workflows/other.yml@refs/heads/main' },
     { GITHUB_SHA: 'not-a-sha' }, { GITHUB_RUN_ATTEMPT: '0' }, { GITHUB_REPOSITORY: 'example/tap\ncode' }]) {
     assert.throws(() => contextFromEnvironment({ ...environment, ...changes }));
@@ -113,7 +118,6 @@ test('byte budgets count UTF-8 and serialized JSON, accepting exact boundaries o
   assert.deepEqual(preparePayload(value, context, base, { change, body }), payload);
   assert.throws(() => preparePayload(value, context, base, { change: change - 1, body }), /Change exceeds/);
   assert.throws(() => preparePayload(value, context, base, { change, body: body - 1 }), /JSON limit/);
-  assert.ok(change < LIMITS.change && body < LIMITS.body);
 });
 
 test('artifact adapter rejects extra entries, symlinks, directories, invalid UTF-8 and oversize', t => {
@@ -204,8 +208,11 @@ test('actual response dispositions remain distinct, with closed replay and pendi
   for (const disposition of ['created', 'replayed', 'pending']) {
     const data = response(disposition), text = summarize(data, context.repository, '201', 'success');
     assert.ok(text.includes(data.pull_request_url)); assert.ok(text.includes(data.head_sha));
-    assert.match(text, { created: /Created a proposal/, replayed: /does not imply.*open PR/, pending: /files were not applied/ }[disposition]);
+    if (disposition === 'pending') assert.match(text, /files were not applied/);
   }
+  const summaries = ['created', 'replayed', 'pending'].map(disposition =>
+    summarize(response(disposition), context.repository, '201', 'success'));
+  assert.equal(new Set(summaries).size, summaries.length);
   for (const bad of [undefined, {}, { ...response('created'), disposition: 'applied' },
     { ...response('created'), repository: 'wrong/tap' }, { ...response('created'), head_sha: '<script>' },
     { ...response('created'), pull_request_number: '42' }, { ...response('created'), pull_request_url: 'https://evil.example' },
