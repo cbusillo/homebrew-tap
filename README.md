@@ -43,43 +43,29 @@ wait seven days before Dependabot opens them; security updates remain separate.
 
 The scheduled/manual updater uses Homebrew livecheck and
 [`bump-formula-pr --write-only`](https://docs.brew.sh/Manpage#bump-formula-pr-options-formula)
-to calculate and audit an update without Git or PR writes. A missing or failed
-livecheck is a failure; a valid no-update result creates no proposal.
+to calculate and audit an update without Git or PR writes. A valid no-update
+result submits nothing; missing or failed livecheck data fails closed.
 
-A separate fresh hosted job reads that run's bounded data artifact outside an
-exact run-SHA checkout. The dependency-free helper preserves every formula byte
-except the stable archive URL and SHA-256, checks a newer numeric version of the
-same upstream and verifies its published stable GitHub release metadata. It never
-loads candidate Ruby or downloads/executes the archive. Homebrew calculates the
-checksum in the unprivileged job; ordinary formula CI verifies the archive and
-installation. Unexpected files, executable edits, modes, provenance or oversized
-requests fail before requesting OIDC. Scheduled runs use GitHub's documented
-default-branch ref; manual runs also require the default branch.
-
-Only the submit job has OIDC permission. It uses the existing Launchplane
-updater-proposal route and service-held App, with `LAUNCHPLANE_PUBLIC_URL` supplied
-as an Actions variable. The exact default-branch workflow selector must already be
-approved in Launchplane. Source changes do not grant access or activate policy;
+A separate fresh hosted job validates the run's bounded data outside its exact
+source-SHA checkout. Only the stable upstream archive URL and SHA-256 may change.
+It verifies a newer published stable release without loading candidate Ruby or
+downloading/executing the archive. Only this job has OIDC permission; the App
+stays in Launchplane. `LAUNCHPLANE_PUBLIC_URL` is an Actions variable, and the
+exact default-branch workflow selector must already be approved.
 [Launchplane#3404](https://github.com/cbusillo/launchplane/issues/3404) owns live
-readiness and real-run qualification. Existing formula CI, review and train gates
-apply to App-authored proposals.
+readiness and real-run qualification. Ordinary formula CI, review and train gates
+still apply; this source change grants no access or policy activation.
 
-Created/replayed results report the actual returned PR and head. Replays may refer
-to closed history. Pending means this run's files were not applied and the existing
-proposal needs ordinary review. A stale-base conflict needs a fresh calculation
-from default. A refusal stops that action; unknown effects retain the exact request
-and available response in the workflow's seven-day recovery artifact for supported
-reconciliation. There is no direct PR publisher or ref-replacement fallback.
-For recovery, re-run **all jobs** on the same run/base so calculation produces a
-fresh attempt-bound artifact. Re-running only the submit job cannot reuse the
-previous attempt's artifact. Request content stays stable across run IDs/attempts
-for the same base and formula update, so the service can reconcile the identical
-request, including closed history. Preserve original evidence when the base or
-upstream changes; do not treat a different request as reconciliation.
+The [producer contract](https://github.com/cbusillo/launchplane/blob/main/docs/service-boundary.md#updater-source-proposals)
+defines proposal dispositions, limits and reconciliation. For recovery, re-run
+**all jobs** so calculation produces a fresh attempt-bound artifact; re-running
+submit alone cannot reuse the earlier attempt's artifact. Request content stays
+stable for the same base and update. Retain the exact request and available
+response from the seven-day recovery artifact when investigating uncertainty.
+If the base or upstream changes, preserve the original evidence and treat the
+new request separately. There is no alternate PR publisher.
 
-The whole helper test module covers the data-to-proposal safety boundary. The
-required `formula` CI job runs it plus all existing Homebrew gates on PRs and train
-candidates. For local helper/workflow changes with the formula unchanged, use
-`qualityGate.test.local` and `qualityGate.syntax` in
-[`.github/github.json`](.github/github.json). Formula edits also require its
-audit, source-install, command and linkage commands.
+The required `formula` CI job runs the whole helper safety module and all existing
+Homebrew gates on PRs and train candidates. Local commands are declared in
+[`.github/github.json`](.github/github.json); formula edits also require its
+audit, source-install, command and linkage checks.
