@@ -37,4 +37,4 @@ sources do not require it.
 Changes land through pull requests on protected `main`. Formula changes must
 pass audit, source installation, command tests, and linkage checks before merge.
 The same checks run on Launchplane train candidates. Routine Actions updates
-wait seven days before Dependabot opens them; security updates remain separate.
+wait seven days before Renovate opens them; security updates remain separate.
