@@ -34,7 +34,7 @@ sources do not require it.
 
 ## Repository Policy
 
-Changes land through pull requests on protected `main`. Formula changes must
-pass audit, source installation, command tests, and linkage checks before merge.
+Formula changes must pass audit, source installation, command tests, and
+linkage checks before merge.
 The same checks run on Launchplane train candidates. Routine Actions updates
 wait seven days before Renovate opens them; security updates remain separate.
