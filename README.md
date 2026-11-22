@@ -36,5 +36,7 @@ sources do not require it.
 
 Formula changes must pass audit, source installation, command tests, and
 linkage checks before merge.
-The same checks run on Launchplane train candidates. Routine Actions updates
-wait seven days before Renovate opens them; security updates remain separate.
+The same checks run on Launchplane train candidates. Renovate proposes
+`bd-to-avp` release updates with the source archive URL and SHA-256.
+Routine updates follow the shared Renovate schedule and release-age rules.
+Security updates remain separate.

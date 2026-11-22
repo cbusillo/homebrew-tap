@@ -21,8 +21,7 @@
     "overview": "README.md",
     "formulaDirectory": "Formula",
     "workflows": [
-      ".github/workflows/tests.yml",
-      ".github/workflows/autobump.yml"
+      ".github/workflows/tests.yml"
     ]
   },
   "qualityGate": {
@@ -46,7 +45,6 @@
   },
   "importantWorkflows": [
     "Test formulae",
-    "Update formulae",
     "Dependabot Updates"
   ],
   "requiredStatusChecks": ["formula"],
